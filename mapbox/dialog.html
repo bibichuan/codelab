@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<title>可移动窗口示例</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.1/mapbox-gl.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.1/mapbox-gl.css' rel='stylesheet' />
+<style>
+body { margin:0; padding:0; }
+#map { position:absolute; top:0; bottom:0; width:100%; }
+*{
+    -moz-user-select: -moz-none; 
+    -moz-user-select: none; 
+    -o-user-select:none; 
+    -khtml-user-select:none; 
+    -webkit-user-select:none; 
+    -ms-user-select:none; 
+    user-select:none;
+}
+</style>
+</head>
+<body>
+ 
+<style>
+ 
+#marker {
+    background-image: url('https://docs.mapbox.com/mapbox-gl-js/assets/washington-monument.jpg');
+    background-size: cover;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+ 
+.mapboxgl-popup {
+    max-width: 200px;
+}
+ 
+</style>
+ 
+<div id='map'></div>
+ 
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYmliaWNodWFuIiwiYSI6ImNrNDJld2RsZDAwMnkzZXBnNHE4cWJqMXAifQ.mcygARsV-Q0RhZGOCHiHnw';
+
+var monument = [-77.0353, 38.8895];
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v10',
+    center: monument,
+    zoom: 15
+});
+ 
+// create the popup
+var popup = new mapboxgl.Popup({ offset: 25 })
+    .setText('Construction on the Washington Monument began in 1848.')
+    .on("open",function(){
+        // 进行拖动
+        drag();
+    })
+ 
+// create DOM element for the marker
+var el = document.createElement('div');
+el.id = 'marker';
+ 
+// create the marker
+new mapboxgl.Marker(el)
+    .setLngLat(monument)
+    .setPopup(popup) // sets a popup on this marker
+    .addTo(map);
+
+// 实现拖拽
+function drag(){
+    //拖拽实现原理
+    //1.鼠标点击时，设置弹窗可拖动，记录鼠标初试位置
+    //2.鼠标拖动时，根据鼠标新位置更新弹窗位置
+    //3.鼠标离开时，设置弹窗不可拖动
+    //4.限制弹窗拖拽范围
+
+    var start=popup.getLngLat(); // 开始移动坐标
+    var mstart=null; // 鼠标开始坐标
+    var mmove=null; // 移动过程中的坐标
+
+    var isDraging = false; // 弹窗不可拖动
+
+    // 监听鼠标移动事件
+    map.on("mousemove",function(e){
+        var move=e.lngLat; // 当前坐标
+        if(isDraging){
+            // 计算插值
+            let dx=move.lng-mstart.lng;
+            let dy=move.lat-mstart.lat;
+
+            // 修改弹出框坐标
+            start.lng+=dx;
+            start.lat+=dy;
+            popup.setLngLat(start);
+
+            // 绘制连线,因为还有偏移量的问题，所有需要重新进行计算
+            let pixel=map.project([start.lng,start.lat]);
+            let tempStart=map.unproject([pixel.x,pixel.y-25]);
+            drawLineLayer([tempStart.lng,tempStart.lat],monument)
+        }
+        mstart=move;
+    });
+
+    var $dialog=document.querySelector(".mapboxgl-map .mapboxgl-popup");
+    //鼠标点击
+    $dialog.addEventListener('mousedown', function (e) {
+        var e = e || window.event; //兼容写法，window.event为IE浏览器独有对象
+        mx = e.pageX; //点击时鼠标X坐标
+        my = e.pageY; //点击时鼠标Y坐标
+        // 将屏幕坐标转为地理坐标
+        let down=map.unproject([mx,my]);
+        mstart=down; // 保存鼠标起始位置
+        isDraging = true; //标记弹窗可拖动
+    }) 
+
+    //鼠标离开
+    $dialog.addEventListener('mouseup', function () {
+        console.log("sdfad");
+        isDraging = false;
+    })
+}
+
+// 添加连接线图层
+let lineSource=null;
+function drawLineLayer(start,end){
+    let data={
+        'type': 'Feature',
+        'properties': {},
+        'geometry': {
+            'type': 'LineString',
+            'coordinates': [
+                start,end
+            ]
+        }
+    };
+    if(!lineSource){
+        lineSource={
+            'type': 'geojson',
+            'data': data
+        };
+        map.addSource('lineSource',lineSource);
+        map.addLayer({
+            'id': 'lineLayer',
+            'type': 'line',
+            'source': 'lineSource',
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                "line-color": "#00ff00",
+                "line-width": 3,
+                "line-dasharray": [2, 4]
+            }
+        });
+    }else{
+        map.getSource('lineSource').setData(data);
+    }
+}
+</script>
+ 
+</body>
+</html>
