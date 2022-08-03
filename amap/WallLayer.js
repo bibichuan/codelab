@@ -68,7 +68,11 @@ export class WallLayer {
             render: () => {
                 // 这里必须执行！！重新设置 three 的 gl 上下文状态。
                 renderer.resetState();
-              
+                // 重新设置图层的渲染中心点，将模型等物体的渲染中心点重置
+                // 否则和 LOCA 可视化等多个图层能力使用的时候会出现物体位置偏移的问题
+                // let center=that.map.getCenter();
+                // customCoords.setCenter([center.lng,center.lat]);
+                
                 var { near, far, fov, up, lookAt, position } = that.customCoords.getCameraParams();
 
 
