@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试标注图层</title>
+    <style>
+        html,
+        body,
+        #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .demo-title {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 0;
+            color: rgb(180, 180, 190);
+        }
+
+        h3 {
+            font-size: 12px;
+            font-weight: normal;
+            margin-top: 5px;
+            color: rgb(150,150,150);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="demo-title">
+        <h1>图标点-智慧交通道路事件情况</h1>
+        <h3>某一时刻检测道路的交通事件情况，通过数据分布对实时交通进行治理和管控</h3>
+    </div>
+    <div id="map"></div>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=您申请的key值&plugin=AMap.Scale,AMap.ToolBar"></script>
+    <script src="https://webapi.amap.com/loca?v=2.0.0&key=您申请的key值"></script>
+    <script src="https://a.amap.com/Loca/static/loca-v2/demos/mock_data/events.js"></script>
+    <script>
+        var map = new AMap.Map('map', {
+            zoom: 13.54,
+            viewMode: '3D',
+            center: [116.398063, 39.988207], //北京
+            mapStyle: 'amap://styles/45311ae996a8bea0da10ad5151f72979',
+        });
+
+        var loca = new Loca.Container({
+            map,
+        });
+        // 生成测试数据
+        function getTestData() {
+            var list = [];
+            for (let i = 0; i < 200; i++) {
+                let fList = [];
+                for (let j = 0; j < 200; j++) {
+                    fList.push([
+                        Number((115.601 + i * 0.002).toFixed(5)), Number((40.32 + j * 0.002).toFixed(5))
+                    ]);
+                }
+                list.push({
+                    "type": "Feature",
+                    "properties": {
+                        "name": i,
+                    },
+                    "geometry": {
+                        "type": "MultiPoint",
+                        "coordinates": fList
+                    }
+                });
+            }
+            list.push({
+                "type": "Feature",
+                "properties": {
+                    "name": 'HIIII',
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [115.201, 40.302]
+                }
+            })
+
+            var data = {
+                "type": "FeatureCollection",
+                "features": list,
+            };
+            return data;
+        }
+        // 获取事件点数据
+        function getEventsCollection() {
+            let _events = events[0].events;
+            var list = _events.map(e => {
+                let ll = e.lngLat.split(',');
+                let arr = [parseFloat(ll[0]), parseFloat(ll[1])]
+                return {
+                    "type": "Feature",
+                    "properties": {
+                        rawData: e
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": arr
+                    }
+                }
+            })
+
+            var data = {
+                "type": "FeatureCollection",
+                "features": list,
+            };
+            return data;
+        }
+        var data = getEventsCollection();
+        var geo = new Loca.GeoJSONSource({
+            data: data,
+        });
+        // 加载标注图层
+        let labelsLayer = new Loca.LabelsLayer({
+            collision: false,
+            opacity: 1,
+            zIndex: 120,
+            allowCollision: false,
+            zooms: [19, 20],
+        });
+        labelsLayer.setSource(geo);
+        labelsLayer.setStyle({
+            text: {
+                content: "测试",
+                offset:[0,-5],
+                style:{
+                    fillColor:"#fff",
+                    fold:true,
+                },
+            },
+        });
+        loca.add(labelsLayer);
+
+        var layer = new Loca.IconLayer({
+            zIndex: 10,
+            opacity: 1,
+            visible: false,
+        });
+
+        var trafficIcons = {
+            1: 'https://a.amap.com/Loca/static/loca-v2/demos/images/traffic-control.png',
+            2: 'https://a.amap.com/Loca/static/loca-v2/demos/images/jam.png',
+            3: 'https://a.amap.com/Loca/static/loca-v2/demos/images/construction.png',
+            4: 'https://a.amap.com/Loca/static/loca-v2/demos/images/close.png',
+            5: 'https://a.amap.com/Loca/static/loca-v2/demos/images/fog.png',
+            0: 'https://a.amap.com/Loca/static/loca-v2/demos/images/accident.png',
+        };
+        layer.setSource(geo);
+        layer.setStyle({
+            unit: 'px',
+            icon: (index, feature) => {
+                let data = feature.properties.rawData;
+                let url = trafficIcons[data.type % Object.keys(trafficIcons).length];
+                return url;
+            },
+            iconSize: [40,40],
+            offset: [0, -40],
+            rotation: 0,
+        })
+
+        loca.add(layer);
+        map.on('complete', function () {
+            setTimeout(function () {
+                layer.show();
+                layer.addAnimate({
+                    key: 'offset',
+                    value: [0, 1],
+                    easing: 'Linear',
+                    transform: 500,
+                    random: true,
+                    delay: 9000,
+                });
+                layer.addAnimate({
+                    key: 'iconSize',
+                    value: [0, 1],
+                    easing: 'Linear',
+                    transform: 500,
+                    random: true,
+                    delay: 9000,
+                });
+            }, 800);
+        });
+        loca.animate.start();
+
+        // 拾取测试
+        map.on('click', (e) => {
+            const feat = layer.queryFeature(e.pixel.toArray());
+            // console.log('feat', feat);
+            if (feat) {
+                layer.setStyle({
+                    unit: 'px',
+                    icon: (index, feature) => {
+                        let data = feature.properties.rawData;
+                        let url = trafficIcons[data.type % Object.keys(trafficIcons).length];
+                        return url;
+                    },
+                    iconSize: (i, feature) => {
+                        if (feature === feat) {
+                            return [60, 60];
+                        }
+                        return [40, 40];
+                    },
+                });
+            }
+        });
+
+        var dat = new Loca.Dat();
+        dat.addLayer(layer);
+
+    </script>
+</body>
+
+</html>
