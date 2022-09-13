@@ -57,44 +57,7 @@
         var loca = new Loca.Container({
             map,
         });
-        // 生成测试数据
-        function getTestData() {
-            var list = [];
-            for (let i = 0; i < 200; i++) {
-                let fList = [];
-                for (let j = 0; j < 200; j++) {
-                    fList.push([
-                        Number((115.601 + i * 0.002).toFixed(5)), Number((40.32 + j * 0.002).toFixed(5))
-                    ]);
-                }
-                list.push({
-                    "type": "Feature",
-                    "properties": {
-                        "name": i,
-                    },
-                    "geometry": {
-                        "type": "MultiPoint",
-                        "coordinates": fList
-                    }
-                });
-            }
-            list.push({
-                "type": "Feature",
-                "properties": {
-                    "name": 'HIIII',
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [115.201, 40.302]
-                }
-            })
-
-            var data = {
-                "type": "FeatureCollection",
-                "features": list,
-            };
-            return data;
-        }
+        
         // 获取事件点数据
         function getEventsCollection() {
             let _events = events[0].events;
@@ -123,15 +86,41 @@
         var geo = new Loca.GeoJSONSource({
             data: data,
         });
+
         // 加载标注图层
-        let labelsLayer = new Loca.LabelsLayer({
+        // 生成测试数据
+        function getData() {
+            var list = [];
+            for (let i = 0; i < 200; i++) {
+                list.push({
+                    "type": "Feature",
+                    "properties": {
+                        "name": i,
+                    },
+                    "geometry": {
+                        "type": "MultiPoint",
+                        "coordinates": [Number((115.601 + i * 0.002).toFixed(5)), Number((40.32 + j * 0.002).toFixed(5))]
+                    }
+                });
+            }
+
+            var data = {
+                "type": "FeatureCollection",
+                "features": list,
+            };
+            return data;
+        }
+        var data2 = getData();
+        var geo2 = new Loca.GeoJSONSource({
+            data: data2,
+        });
+        var labelsLayer = new Loca.LabelsLayer({
             collision: false,
             opacity: 1,
             zIndex: 120,
             allowCollision: false,
-            zooms: [19, 20],
         });
-        labelsLayer.setSource(geo);
+        labelsLayer.setSource(geo2);
         labelsLayer.setStyle({
             text: {
                 content: "测试",
