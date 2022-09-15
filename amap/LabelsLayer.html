@@ -43,8 +43,8 @@
         <h3>某一时刻检测道路的交通事件情况，通过数据分布对实时交通进行治理和管控</h3>
     </div>
     <div id="map"></div>
-    <script src="https://webapi.amap.com/maps?v=2.0&key=您申请的key值&plugin=AMap.Scale,AMap.ToolBar"></script>
-    <script src="https://webapi.amap.com/loca?v=2.0.0&key=您申请的key值"></script>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=0ef1e64da79b6a67290d2d0cc1166d44&plugin=AMap.Scale,AMap.ToolBar"></script>
+    <script src="https://webapi.amap.com/loca?v=2.0.0&key=0ef1e64da79b6a67290d2d0cc1166d44"></script>
     <script src="https://a.amap.com/Loca/static/loca-v2/demos/mock_data/events.js"></script>
     <script>
         var map = new AMap.Map('map', {
@@ -91,15 +91,15 @@
         // 生成测试数据
         function getData() {
             var list = [];
-            for (let i = 0; i < 200; i++) {
+            for (let i = 0; i < 1500; i++) {
                 list.push({
                     "type": "Feature",
                     "properties": {
                         "name": i,
                     },
                     "geometry": {
-                        "type": "MultiPoint",
-                        "coordinates": [Number((115.601 + i * 0.002).toFixed(5)), Number((40.32 + j * 0.002).toFixed(5))]
+                        "type": "Point",
+                        "coordinates": [Number((115.601 + i * 0.002).toFixed(5)), Number((40.32 + i * 0.002).toFixed(5))]
                     }
                 });
             }
