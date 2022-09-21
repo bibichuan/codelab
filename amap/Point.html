@@ -46,53 +46,50 @@
     <script src="https://webapi.amap.com/maps?v=2.0&key=0ef1e64da79b6a67290d2d0cc1166d44"></script>
     <script src="https://webapi.amap.com/loca?v=2.0.0&key=0ef1e64da79b6a67290d2d0cc1166d44"></script>
     <script>
-        var map =  new AMap.Map('map', {
-            zooms: [4, 8],
-            zoom: 4.5,
-            showLabel: false,
-            viewMode: '3D',
-            center: [105.425968, 35.882505],
-            mapStyle: 'amap://styles/45311ae996a8bea0da10ad5151f72979',
+        // 加载地图
+        var mainmap=new AMap.Map('map',{
+            mapStyle: 'amap://styles/8da0701c78123ad8ccfa967bf22a9397', //设置地图的显示样式
+            center:[119.978873,30.273852], // 设置中心
+            zoom:11,
+            viewMode:'3D',
+            pitch:pitch,
+            showBuildingBlock:true, // 显示3D楼宇
+            skyColor:'', // 天空颜色
+            showLabel: true, // 是否显示标注
+            labelRejectMask:true, // 文字是否拒绝掩模图层进行掩模 
         });
 
-        var loca = new Loca.Container({
-            map,
+        // 创建label
+        var labelsLayer = new AMap.LabelsLayer({
+            collision: true,
             opacity: 1,
+            zIndex: 120,
+            allowCollision: false,
+            zooms: [14, 20],
         });
+        // 加载标注
+        for (var i = features.length-1; i>=0; i--) {
+          let item=features[i];
+          let name=item.properties.JZMC;
+          let geom=item.geometry;
+          let coordinates=geom.coordinates;
+          var labelsMarker = new AMap.LabelMarker({
+            name:name,
+            position:new AMap.LngLat(coordinates[0], coordinates[1]),
+            text:{
+              content:name,
+              offset:[0,-5],
+              style:{
+                fillColor:"#fff",
+                fold:true,
+              },
+              extData:item, // 自定义数据
+            }
+          });
+          labelsLayer.add(labelsMarker);
+        // 将标注层添加到地图上
+        mainmap.add(labelsLayer);
 
-        var geo = new Loca.GeoJSONSource({
-            url: 'https://a.amap.com/Loca/static/loca-v2/demos/mock_data/cuisine.json',
-        });
-
-        var pl = window.pl = new Loca.PointLayer({
-            zIndex: 10,
-            blend: 'lighter',
-        });
-
-        var style = {
-            radius: 3.5,
-            unit: 'px',
-            color: '#3C1FA8',
-            borderWidth: 0,
-            blurWidth: 3.5,
-        }
-        pl.setSource(geo);
-        pl.setStyle(style);
-        loca.add(pl);
-
-        // pl.addAnimate({
-        //   key: 'radius',
-        //   value: [0, 1],
-        //   duration: 500,
-        //   easing: 'Linear',
-        //   transform: 2000,
-        //   random: true,
-        //   delay: 8000,
-        //   yoyo:true,
-        //   repeat: 100000
-        // });
-        // var dat = new Loca.Dat();
-        // dat.addLayer(pl);
     </script>
 </body>
 
