@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>旋转线框立方体</title>
+    <title>顶点索引</title>
 </head>
 <body>
 <!--canvas标签创建一个宽高均为500像素，背景为蓝色的矩形画布-->
@@ -72,22 +72,28 @@
          0.5,  0.5, -0.5,
         -0.5,  0.5, -0.5,
         -0.5, -0.5, -0.5,
-         0.5, -0.5, -0.5,
+         0.5, -0.5, -0.5
+    ]);
 
-        // 上面坐标分别对应起来组成一对
-         0.5,  0.5,  0.5,
-         0.5,  0.5, -0.5,
+    // 创建一个顶点索引
+    var indexs=new Uint8Array([
+        // 前四个点
+        0,1,2,3,
+        // 后四个点
+        4,5,6,7,
+        // 前后对应点
+        0,4,
+        1,5,
+        2,6,
+        3,7
+    ]);
+    // 创建顶点缓冲区
+    var indexsBuffer=gl.createBuffer();
+    // 绑定缓冲区对象
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexsBuffer);
+    // 索引数组数据传入缓冲区
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indexs,gl.STATIC_DRAW);
 
-        -0.5,  0.5,  0.5,
-        -0.5,  0.5, -0.5,
-
-
-        -0.5, -0.5,  0.5,
-        -0.5, -0.5, -0.5,
-
-         0.5, -0.5,  0.5,
-         0.5, -0.5, -0.5,
-    ])
 
     // 创建缓冲区
     var buffer=gl.createBuffer();
@@ -101,11 +107,11 @@
     gl.enableVertexAttribArray(aposLocation);
 
     // LINE_LOOP模式绘制前四个点
-    gl.drawArrays(gl.LINE_LOOP,0,4);
+    gl.drawElements(gl.LINE_LOOP,4,gl.UNSIGNED_BYTE,0);
     // LINE_LOOP模式绘制从第五个点开始的绘制四个点
-    gl.drawArrays(gl.LINE_LOOP,4,4);
+    gl.drawElements(gl.LINE_LOOP,4,gl.UNSIGNED_BYTE,4);
     // LINES绘制后8个点
-    gl.drawArrays(gl.LINES,8,8);
+    gl.drawElements(gl.LINES,8,gl.UNSIGNED_BYTE,8);
 
 
 
