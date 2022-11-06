@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>使用WebGL绘制一个点</title>
+</head>
+<body>
+<!--canvas标签创建一个宽高均为500像素，背景为蓝色的矩形画布-->
+<canvas id="webgl" width="500" height="500" style="background-color: #0d72da"></canvas>
+
+<!---顶点着色器代码-->
+<script id="vertexShader" type="x-shader/x-vertex">
+    // attribute 声明vec4类型变量appos
+    attribute vec4 appos;
+    void main(){
+        // 设置几何体旋转角度为30度，并把角度转换为弧度值
+        float radian=radians(30.0);
+        // 求解旋转角度的余玄值
+        float cos=cos(radian);  
+        // 求解正玄值
+        float sin=sin(radian);
+        // 创建x旋转矩阵
+        // 1      0     0   0
+        // 0   cosa  sina   0
+        // 0  -sina  cosa   0
+        // 0      0     0   1
+        mat4 mx=mat4(1,0,0,0,   0,cos,-sin,0,   0,sin,cos,0,   0,0,0,1);
+        // 创建y轴旋转
+        // cosb   0  sinb   0
+        //    0   1     0   0
+        //-sinb   0  cosb   0
+        //    0   0     0   1
+        mat4 my=mat4(cos,0,-sin,0,   0,1,0,0,   sin,0,cos,0,   0,0,0,1);    
+        // 两个旋转矩阵顶点齐次坐标连乘
+        gl_Position=mx*my*appos;
+    }
+</script>
+
+<script id="fragmentShader" type="x-shader/x-fragment">
+    void main(){
+        // 定义片元颜色
+        gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+    }   
+</script>
+
+<script>
+    // 通过getElementById()方法获取canvas画布
+    var canvas=document.getElementById('webgl');
+    // 通过方法getContext()获取WebGL上下文
+    var gl=canvas.getContext('webgl');
+
+    // 顶点着色器源码
+    var vertexShaderSource =document.getElementById("vertexShader").innerText;
+
+    // 片元着色器源码
+    var fragShaderSource =document.getElementById("fragmentShader").innerText;
+
+    // 初始化着色器
+    var program = initShader(gl,vertexShaderSource,fragShaderSource);
+    // 获取顶点着色器的位置变量
+    var aposLocation=gl.getAttribLocation(program,'appos');
+
+    // 创建立方体的顶点坐标数据
+    var data=new Float32Array([
+        // z为0.5时，xOy平面上的四个坐标
+         0.5,  0.5,  0.5,
+        -0.5,  0.5,  0.5,
+        -0.5, -0.5,  0.5,
+         0.5, -0.5,  0.5,
+
+        // z为-0.5时，xOy平面上的四个坐标
+         0.5,  0.5, -0.5,
+        -0.5,  0.5, -0.5,
+        -0.5, -0.5, -0.5,
+         0.5, -0.5, -0.5,
+
+        // 上面坐标分别对应起来组成一对
+         0.5,  0.5,  0.5,
+         0.5,  0.5, -0.5,
+
+        -0.5,  0.5,  0.5,
+        -0.5,  0.5, -0.5,
+
+
+        -0.5, -0.5,  0.5,
+        -0.5, -0.5, -0.5,
+
+         0.5, -0.5,  0.5,
+         0.5, -0.5, -0.5,
+    ])
+
+    // 创建缓冲区
+    var buffer=gl.createBuffer();
+    // 绑定缓冲区对象
+    gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    // 顶点数组data传入缓冲区
+    gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
+    // 缓冲区数据按照一定的规律传递给位置变量apos
+    gl.vertexAttribPointer(aposLocation,3,gl.FLOAT,false,0,0);
+    // 允许数据传递
+    gl.enableVertexAttribArray(aposLocation);
+
+    // LINE_LOOP模式绘制前四个点
+    gl.drawArrays(gl.LINE_LOOP,0,4);
+    // LINE_LOOP模式绘制从第五个点开始的绘制四个点
+    gl.drawArrays(gl.LINE_LOOP,4,4);
+    // LINES绘制后8个点
+    gl.drawArrays(gl.LINES,8,8);
+
+
+
+    // 开始绘制，显示器显示结果
+    gl.drawArrays(gl.POINTS,0,1);
+
+    // 声明初始化着色器函数
+    function initShader(gl,vertexShaderSource,fragmentShaderSource){
+        // 创建顶点着色器对象
+        var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        // 创建片元着色器对象
+        var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        // 引入顶点、片元着色器源代码
+        gl.shaderSource(vertexShader,vertexShaderSource);
+        gl.shaderSource(fragmentShader,fragmentShaderSource);
+        // 编译顶点、片元着色器
+        gl.compileShader(vertexShader);
+        gl.compileShader(fragmentShader);
+
+        // 创建程序对象program
+        var program = gl.createProgram();
+        // 附着顶点着色器和片元着色器到program
+        gl.attachShader(program,vertexShader);
+        gl.attachShader(program,fragmentShader);
+        // 链接program
+        gl.linkProgram(program);
+        // 使用program
+        gl.useProgram(program);
+        // 返回程序program对象
+        return program;
+    }
+</script>
+</body>
+</html>
