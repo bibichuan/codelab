@@ -225,3 +225,5 @@ dist
 .pnp.*
 
 data
+
+web.config 
